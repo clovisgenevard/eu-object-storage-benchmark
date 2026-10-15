@@ -1,0 +1,137 @@
+<div class="wrap">
+<header class="masthead">
+  <p class="crumbs"><a href="https://retrack.github.io/eu-cloud-computing-price-benchmarks/">← All benchmarks and dated readings</a></p>
+  <p class="eyebrow">Exoscale DBaaS · competitive pricing</p>
+  <h1>Managed PostgreSQL in Europe:<br>what a defined workload costs per month</h1>
+  <p class="standfirst">Eleven providers sell managed PostgreSQL in or near Frankfurt, each in its own shape: plans with the disk inside, instances with storage billed apart, standby nodes billed as plans or as copies. This page prices the same workload at each of them. For every offer it picks the cheapest size that meets the vCPU, RAM, storage, standby nodes and point-in-time recovery you ask for, and shows what it costs per month. Every rate was read on 21 September 2026 from the vendors' own pricing pages, price feeds and APIs. Vendors sell sizes, not units, so this is a price per workload, not per GiB.</p>
+  <div class="stamp">
+    <span>Observed <b id="stamp-date">2026-09-21</b></span>
+    <span>Basis <b>730 h/month by default</b></span>
+    <span>Region <b>Frankfurt or closest</b></span>
+    <span>FX <b id="stamp-fx"></b></span>
+    <span>Prices <b>excl. VAT, list</b></span>
+  </div>
+</header>
+
+<section id="pricing">
+<h2 class="section-title">Pricing for a scenario</h2>
+<p class="panel-sub" style="margin-top:0">Pick a workload. For each offer the page takes the cheapest size that meets it and prices it in euros per month. Vendors sell sizes, not units, so this is not a price per GiB. Basis <b id="stamp-hours">730 h/month</b>.</p>
+
+<div class="controls">
+  <div class="controls-grid">
+    <div class="field"><label for="in-vcpu">vCPU per node, min</label><input id="in-vcpu" type="number" min="1" step="1" value="2"></div>
+    <div class="field"><label for="in-ram">RAM per node, GiB min</label><input id="in-ram" type="number" min="1" step="1" value="8"></div>
+    <div class="field"><label for="in-tol">RAM rule</label>
+      <select id="in-tol">
+        <option value="0" selected>strict, at least the RAM asked</option>
+        <option value="0.1">allow sizes up to 10 % below</option>
+      </select></div>
+    <div class="field"><label for="in-disk">Storage, GiB</label><input id="in-disk" type="number" min="1" step="10" value="100"></div>
+    <div class="field"><label for="in-ha">High availability</label>
+      <select id="in-ha">
+        <option value="0" selected>none, one node</option>
+        <option value="1">1 standby node</option>
+        <option value="2">2 standby nodes</option>
+      </select></div>
+    <div class="field"><label for="in-pitr">Point-in-time recovery</label>
+      <select id="in-pitr">
+        <option value="0" selected>not required</option>
+        <option value="1">at least 1 day</option>
+        <option value="2">at least 2 days</option>
+        <option value="7">at least 7 days</option>
+        <option value="14">at least 14 days</option>
+        <option value="30">at least 30 days</option>
+      </select></div>
+    <div class="field"><label for="in-bk">Backup data billed, GiB</label><input id="in-bk" type="number" min="0" step="10" value="0"></div>
+    <div class="field"><label for="in-hours">Hours per month</label>
+      <select id="in-hours">
+        <option value="720">720 h — 30-day month</option>
+        <option value="730" selected>730 h — annual average</option>
+        <option value="744">744 h — 31-day month</option>
+      </select></div>
+    <button class="reset" id="reset" type="button">Reset</button>
+  </div>
+  <div class="toolbar">
+    <span class="tb-label">Scenarios</span>
+    <div class="seg" id="presets" role="group" aria-label="Scenario presets"></div>
+    <span class="tb-label">Include</span>
+    <div class="seg" id="opts" role="group" aria-label="Which sizes may be chosen">
+      <button type="button" data-o="burst" aria-pressed="false"><span class="dot"></span>burstable and shared vCPU</button>
+      <button type="button" data-o="gated" aria-pressed="false"><span class="dot"></span>plans that need activation</button>
+    </div>
+  </div>
+</div>
+
+<div class="tabs" role="tablist" id="tabs"></div>
+<p class="panel-sub" id="panel-sub"></p>
+
+<div class="chart-head">
+  <h2 class="section-title" id="rank-title">Monthly price of the scenario</h2>
+</div>
+<div class="rank" id="rank"></div>
+<p class="legend" id="legend"></p>
+<p class="empty" id="empty" hidden>No offer in this panel can deliver the scenario.</p>
+
+<h2 class="section-title">The size chosen and what it costs</h2>
+<div class="tablewrap">
+  <table>
+    <thead><tr id="thead-row">
+      <th class="sortable" data-sort="vendor">Offer · region</th>
+      <th class="sortable" data-sort="sku">Cheapest size that fits</th>
+      <th class="num sortable" data-sort="comp">Compute<br>€/month</th>
+      <th class="num sortable" data-sort="stor">Storage<br>€/month</th>
+      <th class="num sortable" data-sort="total">Total<br>€/month</th>
+      <th class="sortable" data-sort="pitr">PITR</th>
+      <th>Storage detail</th>
+      <th>Price basis</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+<p class="sorthint">Click a column header to sort; click again to reverse.
+  <button type="button" id="unsort">Reset order</button></p>
+
+<div id="status-block"></div>
+</section>
+
+<section id="method">
+<h2 class="section-title">How it is priced</h2>
+
+<div class="notes">
+  <div class="note">
+    <h3>How the scenario is priced</h3>
+    <ul>
+      <li><b>One size per offer.</b> Among the sizes with at least the requested vCPU and RAM per node, at least the requested standby nodes, and (unless switched on above) not burstable and not gated, the cheapest total wins. The size shown is that one.</li>
+      <li><b>Total = compute + storage + billed backup data.</b> Compute is the hourly rate of all nodes times the hours. Storage is priced the way each vendor bills it, below. Backup data is zero unless you enter a figure, because how much backup a database generates is not published by anyone.</li>
+      <li><b>RAM is compared as stated, and strictly by default.</b> Vendors write GB or GiB without always saying which; a 7 GB size is not accepted for an 8 GiB request, an 8 GB size is. Several vendors sell a "16" size with 15 GB (Aiven on AWS and OVHcloud, OVHcloud DB1-15): with the strict rule a 16 GiB request skips to the next size, which can double a row. The RAM rule above lets you accept sizes up to 10 % below; the size is then tagged with how far below it is.</li>
+      <li><b>A bar is hatched</b> when the cheapest size still fails a requirement: no point-in-time recovery, a shorter window than asked, or a disk cap below the storage requested. Its price is what the vendor charges for the most it does offer. A missing capability is not a discount.</li>
+      <li><b>A price marked ≥</b> is a lower bound: a cost the vendor does not publish is missing from it.</li>
+    </ul>
+  </div>
+  <div class="note">
+    <h3>Why the same words price differently</h3>
+    <ul>
+      <li><b>Storage is bundled or separate.</b> Exoscale sells a plan with its disk inside and no way to add more (the API has a read-only disk size, no disk parameter on create or update), so a bigger disk means a bigger plan. Aiven sells the same plans but adds dynamic disk sizing on most clouds, up to five times the plan's disk, at a per-GB-hour rate; UpCloud and Hobbyist plans cannot be extended. AWS, Azure and Scaleway bill compute and storage apart. OVHcloud bundles a minimum disk per size (160 GiB on the 8 GB size) and bills extra beyond it per GB-hour and per node.</li>
+      <li><b>High availability is billed three ways.</b> AWS Multi-AZ and Azure bill the instance and the storage twice. OVHcloud multiplies the per-node price by the nodes. Scaleway bills a second node without its management fee. Exoscale and Aiven price the two- and three-node plans as plans.</li>
+      <li><b>Point-in-time recovery is not one thing.</b> AWS lets you choose 1 to 35 days on any size. Azure 7 to 35. Exoscale and Aiven fix it by plan tier (Exoscale 1, 2, 14 and 30 days). OVHcloud states a backup retention of 2, 14 and 30 days by plan.</li>
+      <li><b>Burstable and shared vCPU are off by default</b> (AWS <code>db.t*</code>, Azure B-series). Their price is real but the performance is not comparable to a dedicated core.</li>
+    </ul>
+  </div>
+  <div class="note">
+    <h3>Documented gaps, left as gaps</h3>
+    <ul id="gaps"></ul>
+  </div>
+  <div class="note">
+    <h3>How the rates were collected</h3>
+    <p>Machine-readable feeds first, so nothing depends on reading a rendered table.</p>
+    <ul id="how"></ul>
+    <p>Vendor pricing moves without notice: a reading more than a month old should not be relied on.</p>
+  </div>
+</div>
+
+<div class="srcs">
+  <h2 class="section-title" style="margin-top:0">Sources — official pages, read 21 September 2026</h2>
+  <ul id="sources"></ul>
+</div>
+</section>
+</div>

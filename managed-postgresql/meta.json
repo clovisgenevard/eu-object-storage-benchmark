@@ -1,0 +1,5 @@
+{
+  "title": "EU Managed PostgreSQL Benchmark",
+  "description": "Managed PostgreSQL list prices across eleven providers in Europe, priced for a workload you define (vCPU, RAM, storage, standby nodes, point-in-time recovery) at the cheapest size each offer sells for it.",
+  "observed": "2026-09-21"
+}

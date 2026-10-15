@@ -190,6 +190,30 @@ row must carry both fields or it will vanish from the filter.
 For both files: add a new row's `id` to the right panel(s) in `PANELS` at the bottom, or it
 will not appear anywhere.
 
+### 2c. Update `managed-postgresql/data.js`
+
+Vendors sell sizes, not units, so a row is an offer and carries the sizes it sells. The page
+keeps the sizes that meet the scenario and prices the cheapest one.
+
+```js
+{ id:"aws", vendor:"AWS", offer:"RDS for PostgreSQL", region:"eu-central-1 (Frankfurt)", cur:"USD",
+  skus:[{ n:"db.m5.large, single instance",    // label shown in the table
+          nodes:1, standbys:0,                    // machines holding a full copy of the data
+          vcpu:2, ram:8,                          // per node, RAM in GiB as the vendor states it
+          cpu:"dedicated",                        // "dedicated" | "burstable" | "shared" | "unspecified"
+          h:0.212,                                // compute per hour for ALL nodes, ex VAT
+          disk:{ bundled:0, rate:0.137, per:"month", perNode:false, min:20, max:65536 },
+          pitr:35,                                // longest point-in-time window in days, null if none
+          gated:false }],                         // sold only after activation or on request
+  priceBasis:"instance per hour, storage gp3 per GiB-month, published per deployment option" }
+```
+
+`disk.bundled` is the GiB per node included in `h`; `rate` prices a GiB above it (or every GiB
+when nothing is bundled) per `per`; `perNode` is true when every node is billed for its
+storage. A size whose price misses a component the vendor does not publish carries `lb:true`
+and shows as `≥`. Vendors with no PostgreSQL price go in `STATUS_ROWS` with the exact words of
+their own page. Add a new row's `id` to `PANELS` as for the other datasets.
+
 ### 3. Update the reading date
 
 Four places per page carry it: the `// observed` comment at the top of `data.js`, the
@@ -206,6 +230,8 @@ heading (both in `page.html`). The benchmark's `README.md` and the index table i
 - Sanity-check the scenario totals on a row you know well.
 - On the block page, set the IOPS control above and below a vendor's published ceiling and
   confirm the ⚠ marker appears and disappears.
+- On the managed PostgreSQL page, pick each scenario preset and check that a row which cannot
+  meet it is hatched or listed under "Not shown", and that a lower bound keeps its `≥`.
 - Update the "Known gaps" table in that benchmark's `README.md` if a vendor's status changed
   — a rate that became public, a contradiction that got resolved, a region that moved.
 
@@ -253,10 +279,13 @@ mkdir -p ../ghp/runs/$(date +%F)
 cp object-storage/index.html ../ghp/runs/$(date +%F)/index.html
 mkdir -p ../ghp/runs/block/$(date +%F)
 cp block-storage/index.html ../ghp/runs/block/$(date +%F)/index.html
+mkdir -p ../ghp/runs/postgresql/<observed date>
+cp managed-postgresql/index.html ../ghp/runs/postgresql/<observed date>/index.html
 ```
 
 Each benchmark is its own series on that branch — object storage at
-`runs/<YYYY-MM-DD>/index.html`, block storage at `runs/block/<YYYY-MM-DD>/index.html` — with
+`runs/<YYYY-MM-DD>/index.html`, block storage at `runs/block/<YYYY-MM-DD>/index.html`, managed
+PostgreSQL at `runs/postgresql/<YYYY-MM-DD>/index.html` — with
 its own entry in `runs.json`, keyed so a trend dashboard does not mix provisioned-GiB prices
 with stored-GiB prices. They are not comparable numbers and must never share an axis. A
 benchmark added later gets its own `runs/<name>/` prefix on the same pattern.

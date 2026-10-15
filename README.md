@@ -10,6 +10,7 @@ comparison as a single dependency-free HTML page with an adjustable total-cost s
 |---|---|---|---|
 | [**Object storage**](object-storage/) | S3-compatible buckets, from AWS S3 Standard to Glacier Deep Archive | 36 vendor × class | 2026-09-07 |
 | [**Block storage**](block-storage/) | EBS-shaped volumes — attachable, resizable, snapshottable | 37 vendor × class | 2026-09-10 |
+| [**Managed PostgreSQL**](managed-postgresql/) | Managed PostgreSQL priced for a workload you define, from AWS RDS to the European clouds and Aiven on six clouds | 17 offers | 2026-09-21 |
 
 Published readings: **https://retrack.github.io/eu-cloud-computing-price-benchmarks/**
 
